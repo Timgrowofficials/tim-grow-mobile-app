@@ -1,0 +1,46 @@
+workflows:
+  tim-grow-android:
+    name: Tim Grow Android
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      vars:
+        PACKAGE_NAME: "com.timgrow.app"
+        GOOGLE_PLAY_TRACK: internal
+      node: 18
+    cache:
+      cache_paths:
+        - node_modules
+        - android/.gradle
+    triggering:
+      events:
+        - push
+        - tag
+        - pull_request
+      branch_patterns:
+        - pattern: '*'
+          include: true
+          source: true
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install
+      - name: Build web app
+        script: |
+          npm run build
+      - name: Sync Capacitor
+        script: |
+          npx cap sync android
+      - name: Build Android APK
+        script: |
+          cd android
+          ./gradlew assembleDebug
+    artifacts:
+      - android/app/build/outputs/**/*.apk
+    publishing:
+      email:
+        recipients:
+          - info@timgrow.com
+        notify:
+          success: true
+          failure: false

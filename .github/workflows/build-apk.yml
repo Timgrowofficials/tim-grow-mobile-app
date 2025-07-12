@@ -1,0 +1,79 @@
+name: Build Tim Grow APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Build web application
+      run: npm run build
+      
+    - name: Sync Capacitor
+      run: npx cap sync
+      
+    - name: Build APK
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleDebug
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: tim-grow-apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+        
+    - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v1.0.${{ github.run_number }}
+        name: Tim Grow APK v1.0.${{ github.run_number }}
+        body: |
+          🚀 Tim Grow Mobile App APK
+          
+          Features:
+          - Professional splash screen with Tim Grow branding
+          - Native authentication with social login
+          - Multi-step onboarding process
+          - Full business dashboard
+          - Native mobile optimizations
+          
+          To install:
+          1. Download the APK file below
+          2. Enable "Install from Unknown Sources" on your Android device
+          3. Install the APK file
+          4. Open Tim Grow and enjoy!
+        files: android/app/build/outputs/apk/debug/app-debug.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
