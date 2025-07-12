@@ -4,15 +4,8 @@ workflows:
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
-      vars:
-        PACKAGE_NAME: "com.timgrow.app"
       java: 11
       node: 18
-    cache:
-      cache_paths:
-        - node_modules
-        - ~/.gradle/caches
-        - android/.gradle
     triggering:
       events:
         - push
@@ -23,17 +16,20 @@ workflows:
     scripts:
       - name: Install npm dependencies
         script: |
-          npm install
+          npm ci
       - name: Build React app
         script: |
           npm run build
-      - name: Set up local properties
+      - name: Set up Android environment
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
-      - name: Build Android
+          ls -la android/
+      - name: Build Android APK
         script: |
           cd android
-          ./gradlew assembleDebug
+          chmod +x gradlew
+          ls -la
+          ./gradlew clean assembleDebug --info
     artifacts:
       - android/app/build/outputs/**/*.apk
     publishing:
