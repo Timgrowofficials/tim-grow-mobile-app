@@ -22,16 +22,10 @@ workflows:
       - name: Install dependencies
         script: |
           npm install
-      - name: Install Capacitor CLI
-        script: |
-          npm install -g @capacitor/cli
       - name: Build web app
         script: |
           npm run build
-      - name: Sync Capacitor (skip add)
-        script: |
-          npx cap sync android
-      - name: Build Android APK
+      - name: Build Android APK directly
         script: |
           cd android
           chmod +x gradlew
