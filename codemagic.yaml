@@ -1,15 +1,17 @@
 workflows:
-  tim-grow-android:
-    name: Tim Grow Android
+  android-workflow:
+    name: Android Workflow
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
       vars:
         PACKAGE_NAME: "com.timgrow.app"
+      java: 11
       node: 18
     cache:
       cache_paths:
         - node_modules
+        - ~/.gradle/caches
         - android/.gradle
     triggering:
       events:
@@ -19,16 +21,18 @@ workflows:
           include: true
           source: true
     scripts:
-      - name: Install dependencies
+      - name: Install npm dependencies
         script: |
           npm install
-      - name: Build web app
+      - name: Build React app
         script: |
           npm run build
-      - name: Build Android APK directly
+      - name: Set up local properties
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Build Android
         script: |
           cd android
-          chmod +x gradlew
           ./gradlew assembleDebug
     artifacts:
       - android/app/build/outputs/**/*.apk
